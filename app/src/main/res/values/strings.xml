@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FirstPlugin</string>
+    <string name="click_auto">autoclick</string>
 </resources>
