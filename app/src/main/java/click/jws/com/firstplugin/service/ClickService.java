@@ -21,12 +21,14 @@ import java.util.List;
 public class ClickService extends AccessibilityService {
     private static final String TAG = "ClickService";
 
+    public static final String AUTO_CLICK_ACTION = "auto.click";
     public static final String EVENT_FLAG = "event_flag";
     public static final int EVENT_UNKNOWN = 1;
     public static final int EVENT_CLICK = 1;
     public static final int EVENT_KEY = 2;
 
     public static final String VIEW_ID = "view_id";
+    public static final String VIEW_TEXT = "view_text";
     public static final String KEY_CODE = "key_code";
 
     private ClickReceiver receiver;
@@ -35,35 +37,32 @@ public class ClickService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         //接收事件,如触发了通知栏变化、界面变化等
-        Log.i(TAG, "AccessibilityEvent按钮点击变化");
-        //performClick();
+        Log.i(TAG, "onAccessibilityEvent " + event.toString());
     }
 
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
-
-        Log.i(TAG, "按钮点击变化");
-
+        Log.i(TAG, "onKeyEvent " + event.getKeyCode());
         //接收按键事件
         return super.onKeyEvent(event);
     }
 
     @Override
     public void onInterrupt() {
-        Log.i(TAG, "授权中断");
+        Log.i(TAG, "onInterrupt");
         //服务中断，如授权关闭或者将服务杀死
     }
 
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
-        Log.i(TAG, "service授权成功");
+        Log.i(TAG, "onServiceConnected");
         service = this;
         //连接服务后,一般是在授权成功后会接收到
         if (receiver == null) {
             receiver = new ClickReceiver();
             IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction("auto.click");
+            intentFilter.addAction(AUTO_CLICK_ACTION);
             registerReceiver(receiver, intentFilter);
         }
     }
@@ -76,41 +75,31 @@ public class ClickService extends AccessibilityService {
 
     //执行返回
     public void performBack() {
-        Log.i(TAG, "执行返回");
+        Log.i(TAG, "performBack");
         this.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK);
     }
 
-    //执行点击
-    private void performClick() {
+    //perform click view
+    private void performClick(String resourceIdorText) {
 
-        Log.i(TAG, "点击执行");
-
-        AccessibilityNodeInfo nodeInfo = this.getRootInActiveWindow();
-        AccessibilityNodeInfo targetNode = null;
-        //通过名字获取
-        //targetNode = findNodeInfosByText(nodeInfo,"广告");
-        //通过id获取
-        targetNode = findNodeInfosById(nodeInfo, "com.haozhi.projectb:id/bt_browser");
-        if (targetNode.isClickable()) {
-            targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-        }
-    }
-
-    //执行点击
-    private void performClick(String resourceId) {
-
-        Log.i(TAG, "点击执行");
+        Log.i(TAG, "performClick " + resourceIdorText);
 
         AccessibilityNodeInfo nodeInfo = this.getRootInActiveWindow();
         AccessibilityNodeInfo targetNode = null;
-        targetNode = findNodeInfosById(nodeInfo, resourceId);
-        if (targetNode.isClickable()) {
+        targetNode = findNodeInfosById(nodeInfo, resourceIdorText);
+        if (targetNode != null && targetNode.isClickable()) {
             targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+        } else {
+            targetNode = findNodeInfosByText(nodeInfo, resourceIdorText);
+            if (targetNode != null && targetNode.isClickable()) {
+                targetNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            }
         }
     }
 
-    //
-    private void performKeyCode(final int keyCode){
+    //perform click key
+    private void performKeyCode(final int keyCode) {
+        Log.i(TAG, "performKeyCode " + keyCode);
         new Thread(new Runnable() {
             @Override
             public void run() {

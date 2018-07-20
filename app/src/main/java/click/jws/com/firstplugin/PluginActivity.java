@@ -73,6 +73,5 @@ public class PluginActivity extends AppCompatActivity implements OnClickListener
                 }
                 break;
         }
-
     }
 }
